@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vectors with Arrows</title>
+</head>
+<body>
+    <canvas id="vectorsCanvas" width="800" height="600"></canvas>
+    <script>
+        var canvas = document.getElementById('vectorsCanvas');
+        var ctx = canvas.getContext('2d');
+        var gridSize = 50; // Размер ячейки сетки
+
+        // Рисуем сетку
+        ctx.strokeStyle = 'skyblue';
+        for (var x = 0; x < canvas.width; x += gridSize) {
+            for (var y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+        ctx.strokeStyle = 'black';
+        {% for vector in vectors %}
+            var startX = {{ vector[0] }};
+            var startY = {{ vector[1] }};
+            var endX = {{ vector[2] }};
+            var endY = {{ vector[3] }};
+            var arrowSize = 10; // Размер стрелки
+
+            // Рисуем линию вектора
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Рисуем стрелку
+            var angle = Math.atan2(endY - startY, endX - startX);
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI / 6), endY - arrowSize * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI / 6), endY - arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        {% endfor %}
+    </script>
+</body>
+</html>
