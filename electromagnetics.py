@@ -6,11 +6,13 @@ k_const = 9e9
 def getR(X0, X1, point):
     return np.cross(X1 - X0, X0 - point) / np.linalg.norm(X1 - X0)
 
+
 def getAngles(X0, X1, point):
     point_X0, point_X1 = X0 - point, X1 - point
     alpha1 = -np.arctan2(point_X0[0], -point_X0[1])
     alpha2 = -np.arctan2(point_X1[0], -point_X1[1])
     return alpha1, alpha2
+
 
 def Ex(tau, R, alpha1, alpha2):
     global k_const
@@ -39,6 +41,7 @@ def E_rod(X0, X1, point, tau):
 def phi_rod(X0, X1, point, tau):
     alpha1, alpha2 = getAngles(X0, X1, point)
     return phi(tau, alpha1, alpha2)
+
 
 def getAxes(center: np.ndarray, rotation: float, l: float):
     rotation *= -1
@@ -73,6 +76,7 @@ def calculate_phi(l: float, tau: float, center: np.ndarray, rotation: float, poi
     phi1 = phi_rod(X1, center, point, tau)
     return phi0 + phi1
 
-params = (1, 2e-7, np.array([0, 0]), 0, np.array([1,1]))
+
+params = (1, 2e-7, np.array([0, 0]), 0, np.array([1, 1]))
 E = calculate_E(*params)
 print(E, np.linalg.norm(E))
