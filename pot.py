@@ -10,14 +10,16 @@ def rotate_points(points, angle):
     return rotated_points
 
 
+def phi(x0, y0, x1, y1, l, alpha, k, t):
+    return k * t * (np.log(abs(r(x0, x1, y0, y1, 1, l + x0, y0, -alpha) + l + x0 - rotate_points([x1, y1], -alpha)[0]))
+                    - np.log(abs(r(x0, x1, y0, y1, 1, x0, y0, -alpha) + x0 - rotate_points([x1, y1], -alpha)[0]))
+                    + np.log(
+                abs(r(x0, x1, y0, y1, 2, x0, l + y0, -alpha) + l + y0 - rotate_points([x1, y1], -alpha)[1]))
+                    - np.log(abs(r(x0, x1, y0, y1, 2, x0, y0, -alpha) + y0 - rotate_points([x1, y1], -alpha)[1])))
 
-def phi(x0, y0, x1, y1, l,alpha,k,t):
-    return k*t*(np.log(abs(r(x0,x1,y0,y1,1,l+x0,y0,-alpha)+l+x0-rotate_points([x1,y1],-alpha)[0]))
-                -np.log(abs(r(x0,x1,y0,y1,1,x0,y0,-alpha)+x0-rotate_points([x1,y1],-alpha)[0]))
-                +np.log(abs(r(x0,x1,y0,y1,2,x0,l+y0,-alpha)+l+y0-rotate_points([x1,y1],-alpha)[1]))
-                -np.log(abs(r(x0,x1,y0,y1,2,x0,y0,-alpha)+y0-rotate_points([x1,y1],-alpha)[1])))
-def r(x0,x1,y0,y1,num,x,y,alpha):
-    if num==1:
-        return np.sqrt((x - rotate_points([x1,y1],alpha)[0]) ** 2 + (rotate_points([x1,y1],alpha)[1] - y0) ** 2)
+
+def r(x0, x1, y0, y1, num, x, y, alpha):
+    if num == 1:
+        return np.sqrt((x - rotate_points([x1, y1], alpha)[0]) ** 2 + (rotate_points([x1, y1], alpha)[1] - y0) ** 2)
     else:
-        return np.sqrt((y-rotate_points([x1,y1],alpha)[1])**2+(rotate_points([x1,y1],alpha)[0]-x0)**2)
+        return np.sqrt((y - rotate_points([x1, y1], alpha)[1]) ** 2 + (rotate_points([x1, y1], alpha)[0] - x0) ** 2)
