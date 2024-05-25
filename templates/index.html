@@ -5,13 +5,135 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vectors with Arrows</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+        }
+        #parameters {
+            display: flex:
+            flex-direction: column;
+            width: auto:
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            width: 600px;
+            align-items: center;
+            margin-top: 50px;
+        }
+        #container1 {
+            display: flex;
+            flex-direction: column;
+            width: 600px;
+            align-items: center;
+            margin-top: 50px;
+        }
+        #container2 {
+            display: flex;
+            flex-direction: column;
+            width: 600px;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .inputs {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 20px;
+        }
+        .inputs1 {
+            display: flex;
+            justify-content: space-between;
+            width: auto;
+            margin-top: 20px;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-container label {
+            margin-right: 10px;
+
+        }
+
+        input[type="number"] {
+            width: 100px;
+        }
+        #container3, #container4{
+            display: flex;
+            flex-direction: column;
+            width: 600px;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+    </style>
 </head>
 <body>
-    <canvas id="vectorsCanvas" width="800" height="600"></canvas>
+    <canvas id="vectorsCanvas" width="800" height="800"></canvas>
+    <div id="parameters">
+        <div id="container">
+            <div>Центр</div>
+            <div class="inputs">
+                <div class="input-container">
+                    <label for="x">x: <span id="x_val"></span> м</label>
+                    <input type="range" step=0.01 id="x" name="x" min="0" max="2" required>
+                </div>
+                <div class="input-container">
+                    <label for="y">у: <span id="y_val"></span> м</label>
+                    <input type="range" step=0.01 id="y" name="y" min="0" max="2" required>
+                </div>
+            </div>
+        </div>
+        <div id="container1">
+            <div>Длина стержней: <span id="l_val"></span> м</div>
+            <div class="inputs1">
+                <div class="input-container">
+                    <input type="range" step="0.01" id="rotate" name="y" min="0.1" max="2" oninput="validateAndSend()" required>
+                </div>
+            </div>
+        </div>
+        <div id="container2">
+            <div>Tau</div>
+                <div class="input-container">
+                    <div class="inputs1">
+                        <select name="city" id="tau" onchange="validateAndSendTau()" required>
+                            <option value="">-- Выберите TAU --</option>
+                            <option value="1">10 нКл/м</option>
+                            <option value="2">20 нКл/м</option>
+                            <option value="3">30 нКл/м</option>
+                            <option value="4">40 нКл/м</option>
+                        </select>
+                    </div>
+                </div>
+        </div>
+        <div id="container3">
+            <input type="button" onclick="reloadPage()" value="Обновить">
+        </div>
+        <div id="container4">
+            <p>Значения в (<span id="x_val_c"></span>; <span id="y_val_c"></span>)</p>
+            <p>Потенциал: <span id="response_pot"></span> В</p>
+            <p>Напряженность: <span id="response_nap"></span> В/м</p>
+
+        </div>
+    </div>
+
     <script>
         var canvas = document.getElementById('vectorsCanvas');
         var ctx = canvas.getContext('2d');
         var gridSize = 50; // Размер ячейки сетки
+        var vectors = {{ vectors | tojson | safe }}; // Список векторов
+        var x_c = {{ x_c }};
+        var y_c = {{ y_c }};
+        var length = {{ length }};
+        document.getElementById("response_nap").innerText = "{{ response_nap }}";
+        document.getElementById("response_pot").innerText = "{{ response_pot }}";
+        document.getElementById("x_val_c").innerText = "{{ x_val_c }}";
+        document.getElementById("y_val_c").innerText = "{{ y_val_c }}";
 
         // Рисуем сетку
         ctx.strokeStyle = 'skyblue';
@@ -28,29 +150,223 @@
                 ctx.stroke();
             }
         }
+
+
         ctx.strokeStyle = 'black';
-        {% for vector in vectors %}
-            var startX = {{ vector[0] }};
-            var startY = {{ vector[1] }};
-            var endX = {{ vector[2] }};
-            var endY = {{ vector[3] }};
-            var arrowSize = 10; // Размер стрелки
+        ctx.lineWidth = 1;
+
+        // Функция для рисования вектора и добавления его в список vectors
+        function drawVector(x1, y1, x2, y2, fillOpacity, potOpacity) {
+             var squareSize = 50; // Размер квадратика
+
+             var randomColor = 'rgba(0, 255, 0, ' + potOpacity + ')'; // Создаем случайный цвет
+
+            ctx.fillStyle = randomColor;
+            ctx.fillRect(x1 - squareSize / 2, y1 - squareSize / 2, squareSize, squareSize);
+
+            var arrowSize = 15; // Размер стрелки
 
             // Рисуем линию вектора
             ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
             ctx.stroke();
 
             // Рисуем стрелку
-            var angle = Math.atan2(endY - startY, endX - startX);
+            ctx.fillStyle = '#000000';
+            var angle = Math.atan2(y2 - y1, x2 - x1);
             ctx.beginPath();
-            ctx.moveTo(endX, endY);
-            ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI / 6), endY - arrowSize * Math.sin(angle - Math.PI / 6));
-            ctx.moveTo(endX, endY);
-            ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI / 6), endY - arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - arrowSize * Math.cos(angle - Math.PI / 8), y2 - arrowSize * Math.sin(angle - Math.PI / 8));
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - arrowSize * Math.cos(angle + Math.PI / 8), y2 - arrowSize * Math.sin(angle + Math.PI / 8));
             ctx.stroke();
-        {% endfor %}
+
+            var fillColor = '#FF0000'; // Цвет хвоста (например, красный)
+
+            // Рисуем стрелку и хвост
+            ctx.fillStyle = fillColor;
+            ctx.globalAlpha = fillOpacity;
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - arrowSize * Math.cos(angle - Math.PI / 8), y2 - arrowSize * Math.sin(angle - Math.PI / 8));
+            ctx.lineTo(x2 - arrowSize * 2 * Math.cos(angle), y2 - arrowSize * 2 * Math.sin(angle)); // Вершина хвоста
+            ctx.lineTo(x2 - arrowSize * Math.cos(angle + Math.PI / 8), y2 - arrowSize * Math.sin(angle + Math.PI / 8));
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1; // Сброс прозрачности
+
+            // Рисуем обводку стрелки
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - arrowSize * Math.cos(angle), y2 - arrowSize * Math.sin(angle));
+            ctx.stroke();
+
+            // Добавляем вектор в список vectors
+            vectors.push([x1, y1, x2, y2]);
+        }
+
+        // Обработчик события клика на холсте
+        canvas.addEventListener('click', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
+        });
+
+        // Функция для отрисовки всех векторов из списка vectors
+        function drawAllVectors() {
+            vectors.forEach(function(vector) {
+                drawVector(vector[0], vector[1], vector[2], vector[3], vector[4], vector[5]);
+            });
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.lineWidth = 5;
+
+            // Рисуем вертикальную линию
+            ctx.moveTo(x_c, y_c);
+            ctx.lineTo(x_c, y_c + length);
+            ctx.stroke();
+
+            // Рисуем горизонтальную линию
+            ctx.moveTo(x_c, y_c);
+            ctx.lineTo(x_c + length, y_c);
+            ctx.stroke();
+        }
+
+        // Нарисовать все векторы при загрузке страницы
+        drawAllVectors();
+
+
+        canvas.addEventListener('click', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
+
+            document.getElementById("x_val_c").innerText = "{{ x_val_c }}";
+            document.getElementById("y_val_c").innerText = "{{ y_val_c }}";
+            // Отправляем данные о клике на сервер
+            fetch('/add_point', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ x: x, y: y }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('Failed to add point');
+                }
+            })
+            .then(data => {
+                console.log(data); // Оповещение об успешном добавлении точки
+                location.reload(); // Перезагрузка страницы для отрисовки обновленного списка векторов
+            })
+            .catch(error => {
+                console.error(error);
+            });
+            document.getElementById("response_pot").innerText = "{{ response_pot }}";
+            document.getElementById("response_nap").innerText = "{{ response_nap }}";
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const xInput = document.getElementById('x');
+            const yInput = document.getElementById('y');
+
+            function validateAndCorrectInput(input) {
+                let value = parseFloat(input.value, 10);
+                if (isNaN(value)) {
+                    value = 0;
+                }
+                if (value < 0) {
+                    value = 0;
+                } else if (value > 2) {
+                    value = 2;
+                }
+                input.value = value;
+                return value;
+            }
+
+            function sendRequest() {
+                const xValue = validateAndCorrectInput(xInput);
+                const yValue = validateAndCorrectInput(yInput);
+                document.getElementById("x_val").innerText = `${xValue}`;
+                document.getElementById("y_val").innerText = `${yValue}`;
+
+                const data = {
+                    x: xValue,
+                    y: yValue
+                };
+
+                fetch('http://127.0.0.1:5000/change_center', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+            }
+
+            xInput.addEventListener('change', sendRequest);
+            yInput.addEventListener('change', sendRequest);
+        });
+        function validateAndSend() {
+            let inputField = document.getElementById('rotate');
+            let value = parseFloat(inputField.value);
+                document.getElementById("l_val").innerText = `${value}`;
+
+            if (isNaN(value)) {
+                value = 0;
+            } else if (value > 2) {
+                value = 2;
+            } else if (value < 0.1) {
+                value = 0.1;
+            }
+
+            inputField.value = value;
+
+            const data = { rotate: value };
+
+            fetch('http://127.0.0.1:5000/change_rotate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Success:', data))
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        function validateAndSendTau() {
+            let inputField = document.getElementById('tau');
+            let value = parseInt(inputField.value);
+
+            const data = { tau: value };
+
+            fetch('http://127.0.0.1:5000/change_tau', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Success:', data))
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function reloadPage() {
+            location.reload();
+            location.reload();
+        }
     </script>
 </body>
 </html>

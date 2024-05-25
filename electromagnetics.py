@@ -77,6 +77,6 @@ def calculate_phi(l: float, tau: float, center: np.ndarray, rotation: float, poi
     return phi0 + phi1
 
 
-params = (1, 2e-7, np.array([0, 0]), 0, np.array([1, 1]))
+params = (1, 1e-8, np.array([0, 0]), 0, np.array([1, 1]))
 E = calculate_E(*params)
 print(E, np.linalg.norm(E))
